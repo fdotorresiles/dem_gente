@@ -1,0 +1,23 @@
+{
+    "saludo": "Hola bienvenido! Esta usted conversando con un un robot. Muchas gracias por su preferencia. En que le puedo servir?",
+    "despedida": "Estamos para servirte, nos vemos pronto.",
+    "ayuda":[
+        {
+            "titulo": "Información de créditos",
+            "subtitulo": "Sub 1",
+            "postBack": "Información basica"
+        }, {
+            "titulo": "Estados de cuenta",
+            "subtitulo": "Sub 2",
+            "postBack": "Obtener estado de cuenta"
+        }, {
+            "titulo": "Horarios",
+            "subtitulo": "Sub 3",
+            "postBack": "Obtener horarios"
+        }, {
+            "titulo": "Sucursales cercanas",
+            "subtitulo": "Sub 4",
+            "postBack": "Cual es la sucursal mas cercana"
+        }
+    ]
+}

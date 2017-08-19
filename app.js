@@ -2,6 +2,7 @@
 require('dotenv-extended').load();
 
 var builder = require('botbuilder');
+var responemodel = require('./response');
 var restify = require('restify');
 var Store = require('./store');
 var spellService = require('./spell-service');
@@ -18,9 +19,6 @@ var connector = new builder.ChatConnector({
 });
 server.post('/api/messages', connector.listen());
 
-server.get('/', (req, res) => {
-    res.json( { 'status': 'hola' } );
-});
 
 var bot = new builder.UniversalBot(connector, function (session) {
     session.send('Ups \'%s\'. Type \'help\' if you need assistance.', session.message.text);
@@ -104,10 +102,67 @@ bot.dialog('ShowHotelsReviews', function (session, args) {
     matches: 'ShowHotelsReviews'
 });
 
-bot.dialog('Help', function (session) {
-    session.endDialog('Hi! Try asking me things like \'search hotels in Seattle\', \'search hotels near LAX airport\' or \'show me the reviews of The Bot Resort\'');
+bot.dialog('Información', function (session, args) {
+
+    if (args.intent.entities.length > 0) {
+        switch (args.intent.entities[0].type) {
+            case 'Condiciones':
+                switch (args.intent.entities[0].entity) {
+                    case 'desembolsar':
+                        session.send('Tardamos 7 días en desembolsar el crédito')
+                        break;
+                    case 'aprobar':
+                        session.send('Tardamos 2 días en aprobar su crédito')
+                        break;
+                    case 'plazo' && 'plazos' && 'período':
+                        session.send('Ofrecemos plazos desde 24 meses hasta 60 meses')
+                        break;
+                    default:
+                        session.send('NA')
+                        break;
+                }
+                break;
+            case 'Sucursales':
+                //session.send('Seleccione su ubicación')
+                
+                var message = new builder.Message()
+                    .attachmentLayout(builder.AttachmentLayout.carousel)
+                    .attachments(responemodel.ayuda.map(accionesBtnsAttachment));
+                    session.send(message);
+                    
+                break;
+            case 'Horarios':
+                session.send('Nuestros horarios son de 7:00 am a 8:00 pm, por favor no deje de visitarnos.')
+                break;
+
+            default:
+                var message = new builder.Message()
+                    .attachmentLayout(builder.AttachmentLayout.carousel)
+                    .attachments(responemodel.ayuda.map(ayudaAsAttachment));
+                session.send(message);
+                break;
+        }
+    } else {
+        session.send('Podemos realizar las siguiente acciones:')
+        var message = new builder.Message()
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments(responemodel.ayuda.map(ayudaAsAttachment));
+        session.send(message);
+    }
 }).triggerAction({
-    matches: 'Help'
+    matches: 'Información'
+});
+
+bot.dialog('Saludos', function (session, args) {
+    session.endDialog(responemodel.saludo);
+}).triggerAction({
+    matches: 'Saludos'
+});
+
+bot.dialog('Despedida', function (session, args) {
+    session.endDialog(responemodel.despedida);
+}).triggerAction({
+    matches: 'Despedida'
 });
 
 // Spell Check
@@ -140,6 +195,25 @@ function hotelAsAttachment(hotel) {
                 .type('openUrl')
                 .value('https://www.bing.com/search?q=hotels+in+' + encodeURIComponent(hotel.location))
         ]);
+}
+
+function ayudaAsAttachment(ayuda) {
+    return new builder.HeroCard()
+        .title(ayuda.titulo)
+        .subtitle(ayuda.subtitle)
+        .buttons([
+            new builder.CardAction()
+                .title('Elegir')
+                .type('postBack')
+                .value(ayuda.postBack)
+        ]);
+}
+
+function accionesBtnsAttachment(ayuda) {
+    return new builder.CardAction()
+            .title('Elegir')
+            .type('postBack')
+            .value(ayuda.postBack)
 }
 
 function reviewAsAttachment(review) {
