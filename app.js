@@ -13,10 +13,14 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 // Create connector and listen for messages
 var connector = new builder.ChatConnector({
-    appId: "222750f9-d5c8-4500-a3e2-046dc540d8be",
-    appPassword: "rSec7khh9AU2BXdEeeBBgZD"
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 server.post('/api/messages', connector.listen());
+
+server.get('/', (req, res) => {
+    res.json( { 'status': 'hola' } );
+});
 
 var bot = new builder.UniversalBot(connector, function (session) {
     session.send('Ups \'%s\'. Type \'help\' if you need assistance.', session.message.text);
@@ -24,7 +28,7 @@ var bot = new builder.UniversalBot(connector, function (session) {
 
 // You can provide your own model by specifing the 'LUIS_MODEL_URL' environment variable
 // This Url can be obtained by uploading or creating your model from the LUIS portal: https://www.luis.ai/
-var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/1ef92c96-0580-41ca-b4b1-0672c3803636?subscription-key=8ca71a32b1214c7e8abdb465e4d4b326&timezoneOffset=0&verbose=true&q=");
+var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
 bot.recognizer(recognizer);
 
 bot.dialog('SearchHotels', [
