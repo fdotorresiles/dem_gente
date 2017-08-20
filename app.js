@@ -107,6 +107,8 @@ bot.dialog('ShowHotelsReviews', function (session, args) {
     matches: 'ShowHotelsReviews'
 });
 
+bot.library(locationDialog.createLibrary(process.env.BING_MAPS_KEY));
+
 bot.dialog('Información', function (session, args) {
 
     if (args.intent.entities.length > 0) {
@@ -129,15 +131,22 @@ bot.dialog('Información', function (session, args) {
                 break;
             case 'Sucursales':
                 //session.send('Seleccione su ubicación')
-                var lib = new builder.Library('address');
-                lib.library(locationDialog.createLibrary(process.env.BING_MAPS_KEY));
 
                 var options = {
-                    prompt: "Where should I ship your order? Type or say an address.",
-                    useNativeControl: true,
-                    reverseGeocode: true
-                };
-                locationDialog.getLocation(session, options);
+            prompt: "Where should I ship your order?",
+            useNativeControl: true,
+            reverseGeocode: true,
+			skipFavorites: false,
+			skipConfirmationAsk: true,
+            requiredFields:
+                locationDialog.LocationRequiredFields.streetAddress |
+                locationDialog.LocationRequiredFields.locality |
+                locationDialog.LocationRequiredFields.region |
+                locationDialog.LocationRequiredFields.postalCode |
+                locationDialog.LocationRequiredFields.country
+        };
+
+        locationDialog.getLocation(session, options);
                     
                 break;
             case 'Horarios':
@@ -162,16 +171,50 @@ bot.dialog('Información', function (session, args) {
     matches: 'Información'
 });
 
-bot.dialog('Saludos', function (session, args) {
+/*bot.dialog('Saludos', function (session, args) {
     var message =  new builder.Prompts.choice(session,
             'What do yo want to do today?',
             ["Uno", "Otro"],
             { listStyle: builder.ListStyle.button });
         
-    session.endDialog(message);
+    session.send(message);
 }).triggerAction({
     matches: 'Saludos'
+});*/
+
+bot.dialog('Saludos', [
+    function (session) {
+        var options = {
+            prompt: "Where should I ship your order?",
+            useNativeControl: true,
+            reverseGeocode: true,
+			skipFavorites: false,
+			skipConfirmationAsk: true,
+            requiredFields:
+                locationDialog.LocationRequiredFields.streetAddress |
+                locationDialog.LocationRequiredFields.locality |
+                locationDialog.LocationRequiredFields.region |
+                locationDialog.LocationRequiredFields.postalCode |
+                locationDialog.LocationRequiredFields.country
+        };
+
+        locationDialog.getLocation(session, options);
+    },
+    function (session, results) {
+        if (results.response) {
+            var place = results.response;
+			var formattedAddress = 
+            session.send("Thanks, I will ship to " + getFormattedAddressFromPlace(place, ", "));
+        }
+    }
+]).triggerAction({
+    matches: 'Saludos'
 });
+
+function getFormattedAddressFromPlace(place, separator) {
+    var addressParts = [place.streetAddress, place.locality, place.region, place.postalCode, place.country];
+    return addressParts.filter(i => i).join(separator);
+}
 
 bot.dialog('Despedida', function (session, args) {
     session.endDialog(responemodel.despedida);
