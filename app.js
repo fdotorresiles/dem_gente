@@ -7,6 +7,8 @@ var restify = require('restify');
 var Store = require('./store');
 var spellService = require('./spell-service');
 
+var locationDialog = require('botbuilder-location');
+
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -19,6 +21,9 @@ var connector = new builder.ChatConnector({
 });
 server.post('/api/messages', connector.listen());
 
+server.get('/', (req, res) => {
+    res.json( { 'message': 'bienvenido' } );
+});
 
 var bot = new builder.UniversalBot(connector, function (session) {
     session.send('Ups \'%s\'. Type \'help\' if you need assistance.', session.message.text);
@@ -124,11 +129,15 @@ bot.dialog('Información', function (session, args) {
                 break;
             case 'Sucursales':
                 //session.send('Seleccione su ubicación')
-                
-                var message = new builder.Message()
-                    .attachmentLayout(builder.AttachmentLayout.carousel)
-                    .attachments(responemodel.ayuda.map(accionesBtnsAttachment));
-                    session.send(message);
+                var lib = new builder.Library('address');
+                lib.library(locationDialog.createLibrary(process.env.BING_MAPS_KEY));
+
+                var options = {
+                    prompt: "Where should I ship your order? Type or say an address.",
+                    useNativeControl: true,
+                    reverseGeocode: true
+                };
+                locationDialog.getLocation(session, options);
                     
                 break;
             case 'Horarios':
@@ -154,7 +163,12 @@ bot.dialog('Información', function (session, args) {
 });
 
 bot.dialog('Saludos', function (session, args) {
-    session.endDialog(responemodel.saludo);
+    var message =  new builder.Prompts.choice(session,
+            'What do yo want to do today?',
+            ["Uno", "Otro"],
+            { listStyle: builder.ListStyle.button });
+        
+    session.endDialog(message);
 }).triggerAction({
     matches: 'Saludos'
 });
