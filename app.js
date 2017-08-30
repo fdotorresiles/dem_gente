@@ -2,115 +2,79 @@
 require('dotenv-extended').load();
 
 var builder = require('botbuilder');
-var responemodel = require('./response');
 var restify = require('restify');
 var Store = require('./store');
 var spellService = require('./spell-service');
-
 var locationDialog = require('botbuilder-location');
+var responsemodel = require('./response');
+var cnf = require('./config/configuration');
+var Connection = require('tedious').Connection;
+var Request = require('tedious').Request
+
+var config = {
+    userName: cnf.sqlserver.userName,
+    password: cnf.sqlserver.password,
+    server: cnf.sqlserver.server,
+    options: {
+        database: cnf.sqlserver.options.database,
+        encrypt: cnf.sqlserver.options.encrypt,
+    }
+};
+
+var connection = new Connection(config);
+
+// Attempt to connect and execute queries if connection goes through
+connection.on('connect', function(err) {
+    if (err) {
+        console.log(err)
+    }
+});
 
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
 });
+
 // Create connector and listen for messages
 var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
     appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
+
 server.post('/api/messages', connector.listen());
 
 server.get('/', (req, res) => {
-    res.json( { 'message': 'bienvenido' } );
+    res.json( { 'Name': cnf.appName } );
 });
 
 var bot = new builder.UniversalBot(connector, function (session) {
-    session.send('Ups \'%s\'. Type \'help\' if you need assistance.', session.message.text);
-});
-
-// You can provide your own model by specifing the 'LUIS_MODEL_URL' environment variable
-// This Url can be obtained by uploading or creating your model from the LUIS portal: https://www.luis.ai/
-var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
-bot.recognizer(recognizer);
-
-bot.dialog('SearchHotels', [
-    function (session, args, next) {
-        session.send('Welcome to the Hotels finder! We are analyzing your message: \'%s\'', session.message.text);
-
-        // try extracting entities
-        var cityEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'builtin.geography.city');
-        var airportEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'AirportCode');
-        if (cityEntity) {
-            // city entity detected, continue to next step
-            session.dialogData.searchType = 'city';
-            next({ response: cityEntity.entity });
-        } else if (airportEntity) {
-            // airport entity detected, continue to next step
-            session.dialogData.searchType = 'airport';
-            next({ response: airportEntity.entity });
-        } else {
-            // no entities detected, ask user for a destination
-            builder.Prompts.text(session, 'Please enter your destination');
-        }
-    },
-    function (session, results) {
-        var destination = results.response;
-
-        var message = 'Looking for hotels';
-        if (session.dialogData.searchType === 'airport') {
-            message += ' near %s airport...';
-        } else {
-            message += ' in %s...';
-        }
-
-        session.send(message, destination);
-
-        // Async search
-        Store
-            .searchHotels(destination)
-            .then(function (hotels) {
-                // args
-                session.send('I found %d hotels:', hotels.length);
-
-                var message = new builder.Message()
-                    .attachmentLayout(builder.AttachmentLayout.carousel)
-                    .attachments(hotels.map(hotelAsAttachment));
-
-                session.send(message);
-
-                // End
-                session.endDialog();
-            });
-    }
-]).triggerAction({
-    matches: 'SearchHotels',
-    onInterrupted: function (session) {
-        session.send('Please provide a destination');
-    }
-});
-
-bot.dialog('ShowHotelsReviews', function (session, args) {
-    // retrieve hotel name from matched entities
-    var hotelEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'Hotel');
-    if (hotelEntity) {
-        session.send('Looking for reviews of \'%s\'...', hotelEntity.entity);
-        Store.searchHotelReviews(hotelEntity.entity)
-            .then(function (reviews) {
-                var message = new builder.Message()
-                    .attachmentLayout(builder.AttachmentLayout.carousel)
-                    .attachments(reviews.map(reviewAsAttachment));
-                session.endDialog(message);
-            });
-    }
-}).triggerAction({
-    matches: 'ShowHotelsReviews'
+    session.send(responsemodel.ErrorMessages.Ups.message);
 });
 
 bot.library(locationDialog.createLibrary(process.env.BING_MAPS_KEY));
 
-bot.dialog('Información', function (session, args) {
+var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
+bot.recognizer(recognizer);
 
+/*bot.use({
+botbuilder: function (session, next) {
+    var convesation = {
+        idUsuario: 1,
+        conversacion: session.message.text,
+        animo: 50.1
+    };
+    saveDialog(convesation, () => {
+
+    });
+console.log(session.message.text, next);
+},
+send: function (event, next) {
+myMiddleware.logOutgoingMessage(event, next);
+}
+})*/
+
+bot.dialog('Información', function (session, args) {
     if (args.intent.entities.length > 0) {
         switch (args.intent.entities[0].type) {
             case 'Condiciones':
@@ -136,8 +100,8 @@ bot.dialog('Información', function (session, args) {
             prompt: "Where should I ship your order?",
             useNativeControl: true,
             reverseGeocode: true,
-			skipFavorites: false,
-			skipConfirmationAsk: true,
+            skipFavorites: false,
+            skipConfirmationAsk: true,
             requiredFields:
                 locationDialog.LocationRequiredFields.streetAddress |
                 locationDialog.LocationRequiredFields.locality |
@@ -156,7 +120,7 @@ bot.dialog('Información', function (session, args) {
             default:
                 var message = new builder.Message()
                     .attachmentLayout(builder.AttachmentLayout.carousel)
-                    .attachments(responemodel.ayuda.map(ayudaAsAttachment));
+                    .attachments(responsemodel.ayuda.map(ayudaAsAttachment));
                 session.send(message);
                 break;
         }
@@ -164,7 +128,7 @@ bot.dialog('Información', function (session, args) {
         session.send('Podemos realizar las siguiente acciones:')
         var message = new builder.Message()
             .attachmentLayout(builder.AttachmentLayout.carousel)
-            .attachments(responemodel.ayuda.map(ayudaAsAttachment));
+            .attachments(responsemodel.ayuda.map(ayudaAsAttachment));
         session.send(message);
     }
 }).triggerAction({
@@ -188,8 +152,8 @@ bot.dialog('Saludos', [
             prompt: "Where should I ship your order?",
             useNativeControl: true,
             reverseGeocode: true,
-			skipFavorites: false,
-			skipConfirmationAsk: true,
+            skipFavorites: false,
+            skipConfirmationAsk: true,
             requiredFields:
                 locationDialog.LocationRequiredFields.streetAddress |
                 locationDialog.LocationRequiredFields.locality |
@@ -203,21 +167,16 @@ bot.dialog('Saludos', [
     function (session, results) {
         if (results.response) {
             var place = results.response;
-			var formattedAddress = 
-            session.send("Thanks, I will ship to " + getFormattedAddressFromPlace(place, ", "));
+            var formattedAddress = 
+            session.send("Thanks, I will ship to " + this.getFormattedAddressFromPlace(place, ", "));
         }
     }
 ]).triggerAction({
     matches: 'Saludos'
 });
 
-function getFormattedAddressFromPlace(place, separator) {
-    var addressParts = [place.streetAddress, place.locality, place.region, place.postalCode, place.country];
-    return addressParts.filter(i => i).join(separator);
-}
-
 bot.dialog('Despedida', function (session, args) {
-    session.endDialog(responemodel.despedida);
+    session.endDialog(responsemodel.despedida);
 }).triggerAction({
     matches: 'Despedida'
 });
@@ -240,20 +199,14 @@ if (process.env.IS_SPELL_CORRECTION_ENABLED === 'true') {
     });
 }
 
-// Helpers
-function hotelAsAttachment(hotel) {
-    return new builder.HeroCard()
-        .title(hotel.name)
-        .subtitle('%d stars. %d reviews. From $%d per night.', hotel.rating, hotel.numberOfReviews, hotel.priceStarting)
-        .images([new builder.CardImage().url(hotel.image)])
-        .buttons([
-            new builder.CardAction()
-                .title('More details')
-                .type('openUrl')
-                .value('https://www.bing.com/search?q=hotels+in+' + encodeURIComponent(hotel.location))
-        ]);
-}
+function getFormattedAddressFromPlace(place, separator) {
+    var addressParts = [place.streetAddress, place.locality, place.region, place.postalCode, place.country];
+    return addressParts.filter(i => i).join(separator);
+};
 
+    // You can provide your own model by specifing the 'LUIS_MODEL_URL' environment variable
+    // This Url can be obtained by uploading or creating your model from the LUIS portal: https://www.luis.ai/
+    
 function ayudaAsAttachment(ayuda) {
     return new builder.HeroCard()
         .title(ayuda.titulo)
@@ -264,18 +217,32 @@ function ayudaAsAttachment(ayuda) {
                 .type('postBack')
                 .value(ayuda.postBack)
         ]);
-}
+};
 
 function accionesBtnsAttachment(ayuda) {
     return new builder.CardAction()
             .title('Elegir')
             .type('postBack')
             .value(ayuda.postBack)
-}
+};
 
 function reviewAsAttachment(review) {
     return new builder.ThumbnailCard()
         .title(review.title)
         .text(review.text)
         .images([new builder.CardImage().url(review.image)]);
-}
+};
+
+function saveDialog(dialogo, callback) {
+    request = new Request("INSERT INTO chatbotlog (usuario_id, conversacion, estado_animo) VALUES (@usuario_id, @conversacion, @estado_animo)", function(err) {  
+        if (err) {  
+        console.log(err);}  
+    });  
+    var TYPES = require('tedious').TYPES;
+    request.addParameter('usuario_id', TYPES.Int, dialogo.idUsuario);  
+    request.addParameter('conversacion', TYPES.NVarChar, dialogo.conversacion);
+    request.addParameter('estado_animo', TYPES.Float, dialogo.animo);
+        
+    connection.execSql(request);  
+    callback();
+} 

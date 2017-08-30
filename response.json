@@ -19,5 +19,10 @@
             "subtitulo": "Sub 4",
             "postBack": "Cual es la sucursal mas cercana"
         }
-    ]
+    ],
+    "ErrorMessages": {
+        "Ups": {
+            "message" : "No se obtuvo resultados de la evaluación, Escriba ayuda si necesita asistencia."
+        }
+    }
 }

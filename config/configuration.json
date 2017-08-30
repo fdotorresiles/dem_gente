@@ -1,0 +1,13 @@
+{
+    "appName": "Grupo Gente Chat Bot",
+    "sqlserver": {
+        "userName": "botuser",
+        "password": "grupogente2017.",
+        "server": "botservergg.database.windows.net",
+        "options": 
+        {
+            "database": "DBbotGG",
+            "encrypt": true
+        }
+    }
+}
