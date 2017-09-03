@@ -58,7 +58,7 @@ var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
 bot.recognizer(recognizer);
 
 /*bot.use({
-botbuilder: function (session, next) {
+    botbuilder: function (session, next) {
     var convesation = {
         idUsuario: 1,
         conversacion: session.message.text,
@@ -67,11 +67,11 @@ botbuilder: function (session, next) {
     saveDialog(convesation, () => {
 
     });
-console.log(session.message.text, next);
-},
-send: function (event, next) {
-myMiddleware.logOutgoingMessage(event, next);
-}
+    console.log(session.message.text, next);
+    },
+    send: function (event, next) {
+        myMiddleware.logOutgoingMessage(event, next);
+    }
 })*/
 
 bot.dialog('Información', function (session, args) {
