@@ -57,7 +57,7 @@ bot.library(locationDialog.createLibrary(process.env.BING_MAPS_KEY));
 var recognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
 bot.recognizer(recognizer);
 
-/*bot.use({
+bot.use({
     botbuilder: function (session, next) {
     var convesation = {
         idUsuario: 1,
@@ -72,7 +72,7 @@ bot.recognizer(recognizer);
     send: function (event, next) {
         myMiddleware.logOutgoingMessage(event, next);
     }
-})*/
+})
 
 bot.dialog('Información', function (session, args) {
     if (args.intent.entities.length > 0) {
