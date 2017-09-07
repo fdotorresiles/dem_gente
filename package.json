@@ -1,7 +1,7 @@
 {
-  "name": "botbuilder-sample-luis",
+  "name": "bot-grupo-gente",
   "version": "1.0.0",
-  "description": "Bot Builder Sample - LUIS",
+  "description": "Bot grupo gente",
   "scripts": {
     "start": "node app.js"
   },
@@ -14,11 +14,11 @@
     "botbuilder-samples"
   ],
   "bugs": {
-    "url": "https://github.com/Microsoft/BotBuilder-Samples/issues"
+    "url": ""
   },
   "repository": {
-    "type": "git",
-    "url": "https://github.com/Microsoft/BotBuilder-Samples.git"
+    "type": "",
+    "url": ""
   },
   "dependencies": {
     "async": "^2.5.0",
