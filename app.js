@@ -61,8 +61,10 @@ bot.use({
             if (result && result.intent !== 'None') {
 
                 var sql = "Select respuesta from dbo.luismodelrespuestas where intent = '"+result.intent+"'";
+                session.send(result.intent);
                 if (result.entities.length > 0) {
                     sql += " and entity = '"+result.entities[0].type+"'"
+                    session.send(result.entities[0].type);
                 } else {
                     sql += " and entity is null";
                 }
