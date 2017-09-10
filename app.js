@@ -58,60 +58,63 @@ bot.use({
             session.sendTyping();
 
             var convesation = {
-                idUsuario: 1,
+                idUsuario: session.message.user.idUsuario == undefined ? 0 : session.message.user.idUsuario,
                 conversacion: session.message.text,
                 animo: 50.1
             };
 
-            session.send(session.userData);
+            saveDialog(convesation, () => {
+                if (result && result.intent !== 'None') {
+
+                    var sql = "Select * from dbo.luismodelrespuestas where intent = '" + result.intent + "'";
+                    if (result.entities.length > 0) {
+                        sql += " and entity = '" + result.entities[0].type + "'"
+                    } else {
+                        sql += " and entity is null";
+                    }
+
+                    var request = new Request(sql, function (err, rowCount, rows) {
+                        session.send(err.message);
+                    });
+
+                    //request.addParameter('itent', TYPES.VarChar, result.intent);
+
+                    request.on('row', function (columns) {
+                        var messengerActions = new botActions(session);
+
+                        switch (columns[4].value) {
+                            case 'Prompt':
+                                messengerActions.responseTexto(columns[3].value);
+                                messengerActions.responsePromptList(JSON.parse(columns[5].value));
+                                break;
+                            case 'textual':
+                                messengerActions.responseTexto(columns[3].value);
+                                break;
+                            default:
+                                break;
+                        }
+
+                        //Tipo
+                        //columns[4].value
+                        //Titulo
+                        //columns[3].value
+                        //Opciones
+                        //columns[5].value
+                        //console.log()
+
+                        //session.send(columns[0].value);
+                    });
+
+                    connection.execSql(request);
+                } else {
+                    callback(null, 0.0);
+                }
+
+            });
+
             // If the intent returned isn't the 'None' intent return it
             // as the prompts response.
             //result.intent == 'None'
-            if (result && result.intent !== 'None') {
-
-                var sql = "Select * from dbo.luismodelrespuestas where intent = '" + result.intent + "'";
-                if (result.entities.length > 0) {
-                    sql += " and entity = '" + result.entities[0].type + "'"
-                } else {
-                    sql += " and entity is null";
-                }
-
-                var request = new Request(sql, function (err, rowCount, rows) {
-                    session.send(err);
-                });
-
-                //request.addParameter('itent', TYPES.VarChar, result.intent);
-
-                request.on('row', function (columns) {
-                    var messengerActions = new botActions(session);
-
-                    switch (columns[4].value) {
-                        case 'Prompt':
-                            messengerActions.responseTexto(columns[3].value);
-                            messengerActions.responsePromptList(JSON.parse(columns[5].value));
-                            break;
-                        case 'textual':
-                            messengerActions.responseTexto(columns[3].value);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    //Tipo
-                    //columns[4].value
-                    //Titulo
-                    //columns[3].value
-                    //Opciones
-                    //columns[5].value
-                    //console.log()
-
-                    //session.send(columns[0].value);
-                });
-
-                connection.execSql(request);
-            } else {
-                callback(null, 0.0);
-            }
         });
 
     },
