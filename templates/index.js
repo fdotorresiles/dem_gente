@@ -17,7 +17,7 @@ module.exports = class Templates {
         var arrayButtons = [];
 
         data.opciones.forEach(function (element) {
-            arrayButtons.push(new builder.CardAction.imBack(this.session, element.entity, element.entity));
+            arrayButtons.push(new builder.CardAction.imBack(this.session, element.entity, element.titulo));
         }, this);
 
         const card = new builder.ThumbnailCard(this.session)
