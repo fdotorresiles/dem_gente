@@ -12,8 +12,7 @@ module.exports = class Templates {
     }
 
     //Templates bellow
-    promptList(data) {
-
+    responsePromptList(data) {
 
         var arrayButtons = [];
 
@@ -26,20 +25,13 @@ module.exports = class Templates {
             .text(data.descripción)
             .buttons(arrayButtons)
 
-
         const message = new builder.Message(this.session)
             .addAttachment(card);
         this.sendResponse(message);
+    }
 
-        /*const card = new builder.ThumbnailCard(this.session)
-            .title(title)
-            .buttons([
-                new builder.CardAction.imBack(session, 'Red', 'Red'),
-                new builder.CardAction.imBack(session, 'Blue', 'Blue'),
-                new builder.CardAction.imBack(session, 'Green', 'Green'),
-            ]);
-        const message = new builder.Message(this.session).addAttachment(card);
-        this.sendResponse(message);*/
+    responseTexto(data){
+        this.sendResponse(data);
     }
 
 }

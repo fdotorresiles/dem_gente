@@ -78,11 +78,14 @@ bot.use({
                 //request.addParameter('itent', TYPES.VarChar, result.intent);
 
                 request.on('row', function (columns) {
-                    var messangerActions = new botActions(session);
+                    var messengerActions = new botActions(session);
 
                     switch (columns[4].value) {
                         case 'Prompt':
-                        messangerActions.promptList(JSON.parse(columns[5].value));
+                            messengerActions.responsePromptList(JSON.parse(columns[5].value));
+                            break;
+                        case 'textual':
+                            messengerActions.responseTexto(columns[3].value);
                             break;
                         default:
                             break;
