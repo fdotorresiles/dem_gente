@@ -8,6 +8,10 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "keywords": [
+    "botbuilder",
+    "bots",
+    "chatbots",
+    "botbuilder-samples"
   ],
   "bugs": {
     "url": ""
@@ -18,12 +22,12 @@
   },
   "dependencies": {
     "async": "^2.5.0",
-    "bluebird": "^3.5.0",
-    "botbuilder": "^3.9.1",
+    "bluebird": "^3.4.7",
+    "botbuilder": "^3.8.2",
     "botbuilder-location": "^2.0.0",
-    "dotenv-extended": "^2.0.1",
-    "request": "^2.81.0",
-    "restify": "^5.2.0",
+    "dotenv-extended": "^1.0.4",
+    "request": "^2.79.0",
+    "restify": "^4.3.0",
     "tedious": "^2.0.0"
   }
 }
