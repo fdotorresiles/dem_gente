@@ -14,15 +14,16 @@ module.exports = class Templates {
     //Templates bellow
     responsePromptList(data) {
 
-        const choices = ['Red', 'Blue', 'Green']
+        /*
         const card = new builder.ThumbnailCard(this.session)
             .title(data.titulo)
             .buttons(data.opciones.map(item => new builder.CardAction.imBack(this.session, item.entity, item.titulo)));
         const message = new builder.Message(this.session)
             .addAttachment(card);
         builder.Prompts.choice(this.session, message, data.opciones);
+        */
 
-        /*var arrayButtons = [];
+        var arrayButtons = [];
 
         data.opciones.forEach(function (element) {
             arrayButtons.push(new builder.CardAction.imBack(this.session, element.entity, element.titulo));
@@ -36,7 +37,7 @@ module.exports = class Templates {
         const message = new builder.Message(this.session)
             .addAttachment(card);
         this.sendResponse(message);
-        */
+        
     }
 
     responseTexto(data) {
