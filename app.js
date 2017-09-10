@@ -56,6 +56,14 @@ bot.use({
     botbuilder: function (session, next) {
         recognizer.recognize(session, function (err, result) {
             session.sendTyping();
+
+            var convesation = {
+                idUsuario: 1,
+                conversacion: session.message.text,
+                animo: 50.1
+            };
+
+            session.send(session.userData);
             // If the intent returned isn't the 'None' intent return it
             // as the prompts response.
             //result.intent == 'None'
@@ -111,5 +119,20 @@ bot.use({
         myMiddleware.logOutgoingMessage(event, next);
     }
 })
+
+function saveDialog(dialogo, callback) {
+    request = new Request("INSERT INTO chatbotlog (usuario_id, conversacion, estado_animo) VALUES (@usuario_id, @conversacion, @estado_animo)", function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+    var TYPES = require('tedious').TYPES;
+    request.addParameter('usuario_id', TYPES.Int, dialogo.idUsuario);
+    request.addParameter('conversacion', TYPES.NVarChar, dialogo.conversacion);
+    request.addParameter('estado_animo', TYPES.Float, dialogo.animo);
+
+    connection.execSql(request);
+    callback();
+}
 //Que documentos tengo que presentar
 //Cuales son los intereses
