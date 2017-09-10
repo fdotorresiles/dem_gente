@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "siteName": {
-      "defaultValue": "beto-bot-sample",
+      "defaultValue": "BotBuilder-Samples",
       "type": "string"
     },
     "hostingPlanName": {
