@@ -56,61 +56,68 @@ bot.use({
     botbuilder: function (session, next) {
         recognizer.recognize(session, function (err, result) {
             session.sendTyping();
-
             var convesation = {
                 idUsuario: session.message.user.idUsuario == undefined ? 0 : session.message.user.idUsuario,
+                nombre_usuario: session.message.user.name == undefined ? "undefined" : session.message.user.name,
                 conversacion: session.message.text,
                 animo: 50.1
             };
 
             saveDialog(convesation, () => {
-                if (result && result.intent !== 'None') {
 
-                    var sql = "Select * from dbo.luismodelrespuestas where intent = '" + result.intent + "'";
-                    if (result.entities.length > 0) {
-                        sql += " and entity = '" + result.entities[0].type + "'"
-                    } else {
-                        sql += " and entity is null";
-                    }
-
-                    var request = new Request(sql, function (err, rowCount, rows) {
-                        session.send(err.message);
-                    });
-
-                    //request.addParameter('itent', TYPES.VarChar, result.intent);
-
-                    request.on('row', function (columns) {
-                        var messengerActions = new botActions(session);
-
-                        switch (columns[4].value) {
-                            case 'Prompt':
-                                messengerActions.responseTexto(columns[3].value);
-                                messengerActions.responsePromptList(JSON.parse(columns[5].value));
-                                break;
-                            case 'textual':
-                                messengerActions.responseTexto(columns[3].value);
-                                break;
-                            default:
-                                break;
-                        }
-
-                        //Tipo
-                        //columns[4].value
-                        //Titulo
-                        //columns[3].value
-                        //Opciones
-                        //columns[5].value
-                        //console.log()
-
-                        //session.send(columns[0].value);
-                    });
-
-                    connection.execSql(request);
-                } else {
-                    callback(null, 0.0);
-                }
 
             });
+
+
+            if (result && result.intent !== 'None') {
+
+                var sql = "Select * from dbo.luismodelrespuestas where intent = '" + result.intent + "'";
+                if (result.entities.length > 0) {
+                    sql += " and entity = '" + result.entities[0].type + "'"
+                } else {
+                    sql += " and entity is null";
+                }
+
+                var request = new Request(sql, function (err, rowCount, rows) {
+                    if (err != undefined) {
+                        session.send(err.message);
+                    }
+
+                });
+
+                //request.addParameter('itent', TYPES.VarChar, result.intent);
+
+                request.on('row', function (columns) {
+
+                    var messengerActions = new botActions(session);
+
+                    switch (columns[4].value) {
+                        case 'Prompt':
+                            messengerActions.responseTexto(columns[3].value);
+                            messengerActions.responsePromptList(JSON.parse(columns[5].value));
+                            break;
+                        case 'textual':
+                            messengerActions.responseTexto(columns[3].value);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    //Tipo
+                    //columns[4].value
+                    //Titulo
+                    //columns[3].value
+                    //Opciones
+                    //columns[5].value
+                    //console.log()
+
+                    //session.send(columns[0].value);
+                });
+
+                connection.execSql(request);
+            } else {
+                callback(null, 0.0);
+            }
 
             // If the intent returned isn't the 'None' intent return it
             // as the prompts response.
@@ -124,15 +131,17 @@ bot.use({
 })
 
 function saveDialog(dialogo, callback) {
-    request = new Request("INSERT INTO chatbotlog (usuario_id, conversacion, estado_animo) VALUES (@usuario_id, @conversacion, @estado_animo)", function (err) {
+    request = new Request("INSERT INTO chatbotlog (usuario_id, conversacion, estado_animo, nombre_usuario) VALUES (@usuario_id, @conversacion, @estado_animo, @nombre_usuario)", function (err) {
         if (err) {
             console.log(err);
         }
     });
     var TYPES = require('tedious').TYPES;
     request.addParameter('usuario_id', TYPES.Int, dialogo.idUsuario);
+    request.addParameter('nombre', TYPES.Int, dialogo.idUsuario);
     request.addParameter('conversacion', TYPES.NVarChar, dialogo.conversacion);
     request.addParameter('estado_animo', TYPES.Float, dialogo.animo);
+    request.addParameter('nombre_usuario', TYPES.NVarChar, dialogo.nombre_usuario);
 
     connection.execSql(request);
     callback();
