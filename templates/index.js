@@ -22,7 +22,7 @@ module.exports = class Templates {
 
         const card = new builder.ThumbnailCard(this.session)
             .title(data.titulo)
-            .text(data.descripción)
+            //.text(data.descripción)
             .buttons(arrayButtons)
 
         const message = new builder.Message(this.session)

@@ -4,7 +4,6 @@ var botActions = require('./templates');
 
 var builder = require('botbuilder');
 var restify = require('restify');
-var Store = require('./store');
 var spellService = require('./spell-service');
 var locationDialog = require('botbuilder-location');
 var responsemodel = require('./response');
@@ -56,7 +55,7 @@ server.get('/', (req, res) => {
 bot.use({
     botbuilder: function (session, next) {
         recognizer.recognize(session, function (err, result) {
-
+            session.sendTyping();
             // If the intent returned isn't the 'None' intent return it
             // as the prompts response.
             //result.intent == 'None'
@@ -82,6 +81,7 @@ bot.use({
 
                     switch (columns[4].value) {
                         case 'Prompt':
+                            messengerActions.responseTexto(columns[3].value);
                             messengerActions.responsePromptList(JSON.parse(columns[5].value));
                             break;
                         case 'textual':
